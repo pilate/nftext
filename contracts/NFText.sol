@@ -10,6 +10,7 @@ import "./Base64.sol";
 
 contract NFText is ERC721Enumerable, Ownable {
     using Strings for uint256;
+    
     mapping(uint256 => Word) public wordsToTokenId;
 
     struct Word {
@@ -21,25 +22,24 @@ contract NFText is ERC721Enumerable, Ownable {
     constructor() ERC721("NFText", "NTXT") {}
 
     function mint(string memory _userText) public payable {
-        uint256 supply = totalSupply();
         require(bytes(_userText).length <= 30, "String input exceeds limit.");
+        uint256 supply = totalSupply();
 
         Word memory newWord = Word(
             _userText,
-            randomNum(361, block.difficulty, supply).toString(),
-            randomNum(361, block.timestamp, supply).toString()
+            randomHue(block.difficulty, supply).toString(),
+            randomHue(block.timestamp, supply).toString()
         );
 
         if (msg.sender != owner()) {
             require(msg.value >= 0.005 ether);
         }
 
-        wordsToTokenId[supply + 1] = newWord; //Add word to mapping @tokenId
+        wordsToTokenId[supply + 1] = newWord;
         _safeMint(msg.sender, supply + 1);
     }
 
-    function randomNum(
-        uint256 _mod,
+    function randomHue(
         uint256 _seed,
         uint256 _salt
     ) public view returns (uint256) {
@@ -47,7 +47,7 @@ contract NFText is ERC721Enumerable, Ownable {
             keccak256(
                 abi.encodePacked(block.timestamp, msg.sender, _seed, _salt)
             )
-        ) % _mod;
+        ) % 361;
     }
 
     function buildImage(uint256 _tokenId) private view returns (bytes memory) {
