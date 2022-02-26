@@ -57,14 +57,13 @@ contract NFText is ERC721Enumerable, Ownable {
 
     function buildImage(uint256 _tokenId) private view returns (string memory) {
         Word memory currentWord = wordsToTokenId[_tokenId];
-        string memory random = randomNum(361, 3, 3).toString();
         return
             Base64.encode(
                 bytes(
                     abi.encodePacked(
                         '<svg xmlns="http://www.w3.org/2000/svg">',
                         '  <rect height="100%" width="100%" y="0" x="0" fill="hsl(', currentWord.bgHue, ',50%,25%)"/>',
-                        '  <text y="50%" x="50%" text-anchor="middle" dy=".3em" fill="hsl(', random, ',100%,80%)">', currentWord.value, "</text>",
+                        '  <text y="50%" x="50%" text-anchor="middle" dy=".3em" fill="hsl(', currentWord.textHue, ',100%,80%)">', currentWord.value, "</text>",
                         "</svg>"
                     )
                 )
