@@ -4,7 +4,9 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+
 import "./Base64.sol";
+
 
 contract NFText is ERC721Enumerable, Ownable {
     using Strings for uint256;
@@ -41,46 +43,22 @@ contract NFText is ERC721Enumerable, Ownable {
         uint256 _seed,
         uint256 _salt
     ) public view returns (uint256) {
-        uint256 num = uint256(
+        return uint256(
             keccak256(
                 abi.encodePacked(block.timestamp, msg.sender, _seed, _salt)
             )
         ) % _mod;
-        return num;
     }
 
-    function buildImage(uint256 _tokenId) private view returns (string memory) {
+    function buildImage(uint256 _tokenId) private view returns (bytes memory) {
         Word memory currentWord = wordsToTokenId[_tokenId];
         return
             Base64.encode(
-                bytes(
-                    abi.encodePacked(
-                        '<svg xmlns="http://www.w3.org/2000/svg">',
-                        '  <rect height="100%" width="100%" y="0" x="0" fill="hsl(', currentWord.bgHue, ',50%,25%)"/>',
-                        '  <text y="50%" x="50%" text-anchor="middle" dy=".3em" fill="hsl(', currentWord.textHue, ',100%,80%)">', currentWord.text, "</text>",
-                        "</svg>"
-                    )
-                )
-            );
-    }
-
-    function buildMetadata(uint256 _tokenId)
-        private
-        view
-        returns (string memory)
-    {
-        Word memory currentWord = wordsToTokenId[_tokenId];
-        return
-            string(
-                abi.encodePacked(
-                    "data:application/json;base64,",
-                    Base64.encode(
-                        bytes(
-                            abi.encodePacked(
-                                '{"name":"NFTXT:', currentWord.text, '", "description":"', currentWord.text, '", "image": "data:image/svg+xml;base64,', buildImage(_tokenId), '"}'
-                            )
-                        )
-                    )
+                bytes.concat(
+                    '<svg xmlns="http://www.w3.org/2000/svg">'
+                    '  <rect height="100%" width="100%" y="0" x="0" fill="hsl(', bytes(currentWord.bgHue), ',50%,25%)"/>'
+                    '  <text y="50%" x="50%" text-anchor="middle" dy=".3em" fill="hsl(', bytes(currentWord.textHue), ',100%,80%)">', bytes(currentWord.text), "</text>"
+                    "</svg>"
                 )
             );
     }
@@ -96,7 +74,19 @@ contract NFText is ERC721Enumerable, Ownable {
             _exists(_tokenId),
             "ERC721Metadata: URI query for nonexistent token"
         );
-        return buildMetadata(_tokenId);
+
+        Word memory currentWord = wordsToTokenId[_tokenId];
+        return
+            string(
+                bytes.concat(
+                    "data:application/json;base64,",
+                    Base64.encode(
+                        bytes.concat(
+                            '{"name":"NFTXT:', bytes(currentWord.text), '", "description":"', bytes(currentWord.text), '", "image": "data:image/svg+xml;base64,', buildImage(_tokenId), '"}'
+                        )
+                    )
+                )
+            );
     }
 
     //only owner
