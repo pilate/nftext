@@ -8,9 +8,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Base64.sol";
 
 
-contract NFText is ERC721Enumerable, Ownable {
+contract NFTText is ERC721Enumerable, Ownable {
     using Strings for uint256;
-    
+
     mapping(uint256 => Word) public wordsToTokenId;
 
     struct Word {
@@ -19,7 +19,9 @@ contract NFText is ERC721Enumerable, Ownable {
         string textHue;
     }
 
-    constructor() ERC721("NFText", "NTXT") {}
+    constructor() ERC721("NFTText", "NTXT") {
+        mint('first');
+    }
 
     function mint(string memory _userText) public payable {
         require(bytes(_userText).length <= 30, "String input exceeds limit.");
@@ -56,8 +58,8 @@ contract NFText is ERC721Enumerable, Ownable {
             Base64.encode(
                 bytes.concat(
                     '<svg xmlns="http://www.w3.org/2000/svg">'
-                    '  <rect height="100%" width="100%" y="0" x="0" fill="hsl(', bytes(currentWord.bgHue), ',50%,25%)"/>'
-                    '  <text y="50%" x="50%" text-anchor="middle" dy=".3em" fill="hsl(', bytes(currentWord.textHue), ',100%,80%)">', bytes(currentWord.text), "</text>"
+                    '<rect height="100%" width="100%" y="0" x="0" fill="hsl(', bytes(currentWord.bgHue), ',50%,25%)"/>'
+                    '<text y="50%" x="50%" text-anchor="middle" dy=".3em" fill="hsl(', bytes(currentWord.textHue), ',100%,80%)">', bytes(currentWord.text), "</text>"
                     "</svg>"
                 )
             );
@@ -82,7 +84,11 @@ contract NFText is ERC721Enumerable, Ownable {
                     "data:application/json;base64,",
                     Base64.encode(
                         bytes.concat(
-                            '{"name":"NFTXT:', bytes(currentWord.text), '", "description":"', bytes(currentWord.text), '", "image": "data:image/svg+xml;base64,', buildImage(_tokenId), '"}'
+                            "{"
+                                '"name":"NFTXT:', bytes(currentWord.text), '",'
+                                '"description":"', bytes(currentWord.text), '",'
+                                '"image":"data:image/svg+xml;base64,', buildImage(_tokenId), '"'
+                            "}"
                         )
                     )
                 )
