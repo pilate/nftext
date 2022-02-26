@@ -8,30 +8,24 @@ import "./Base64.sol";
 
 contract NFText is ERC721Enumerable, Ownable {
     using Strings for uint256;
-    bool public paused = false;
     mapping(uint256 => Word) public wordsToTokenId;
-    uint256 public stringLimit = 30;
 
     struct Word {
-        string name;
+        string text;
         string bgHue;
         string textHue;
-        string value;
     }
 
     constructor() ERC721("NFText", "NTXT") {}
 
-    // public
     function mint(string memory _userText) public payable {
         uint256 supply = totalSupply();
-        bytes memory strBytes = bytes(_userText);
-        require(strBytes.length <= stringLimit, "String input exceeds limit.");
+        require(bytes(_userText).length <= 30, "String input exceeds limit.");
 
         Word memory newWord = Word(
-            string(abi.encodePacked("NFT", uint256(supply + 1).toString())),
+            _userText,
             randomNum(361, block.difficulty, supply).toString(),
-            randomNum(361, block.timestamp, supply).toString(),
-            _userText
+            randomNum(361, block.timestamp, supply).toString()
         );
 
         if (msg.sender != owner()) {
@@ -63,7 +57,7 @@ contract NFText is ERC721Enumerable, Ownable {
                     abi.encodePacked(
                         '<svg xmlns="http://www.w3.org/2000/svg">',
                         '  <rect height="100%" width="100%" y="0" x="0" fill="hsl(', currentWord.bgHue, ',50%,25%)"/>',
-                        '  <text y="50%" x="50%" text-anchor="middle" dy=".3em" fill="hsl(', currentWord.textHue, ',100%,80%)">', currentWord.value, "</text>",
+                        '  <text y="50%" x="50%" text-anchor="middle" dy=".3em" fill="hsl(', currentWord.textHue, ',100%,80%)">', currentWord.text, "</text>",
                         "</svg>"
                     )
                 )
@@ -83,7 +77,7 @@ contract NFText is ERC721Enumerable, Ownable {
                     Base64.encode(
                         bytes(
                             abi.encodePacked(
-                                '{"name":"', currentWord.name, '", "description":"', currentWord.name, '", "image": "data:image/svg+xml;base64,', buildImage(_tokenId), '"}'
+                                '{"name":"NFTXT:', currentWord.text, '", "description":"', currentWord.text, '", "image": "data:image/svg+xml;base64,', buildImage(_tokenId), '"}'
                             )
                         )
                     )
