@@ -23,6 +23,17 @@ contract NFTText is ERC721Enumerable, Ownable {
         mint('first');
     }
 
+    function randomHue(
+        uint256 _seed,
+        uint256 _salt
+    ) public view returns (uint256) {
+        return uint256(
+            keccak256(
+                abi.encodePacked(block.timestamp, msg.sender, _seed, _salt)
+            )
+        ) % 361;
+    }
+
     function mint(string memory _userText) public payable {
         mint(_userText, msg.sender);
     }
@@ -43,17 +54,6 @@ contract NFTText is ERC721Enumerable, Ownable {
 
         wordsToTokenId[supply + 1] = newWord;
         _safeMint(_destination, supply + 1);
-    }
-
-    function randomHue(
-        uint256 _seed,
-        uint256 _salt
-    ) public view returns (uint256) {
-        return uint256(
-            keccak256(
-                abi.encodePacked(block.timestamp, msg.sender, _seed, _salt)
-            )
-        ) % 361;
     }
 
     function buildImage(uint256 _tokenId) private view returns (bytes memory) {
