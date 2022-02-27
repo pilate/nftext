@@ -21,7 +21,7 @@ contract NFTText is ERC721Enumerable, Ownable {
     }
 
     constructor() ERC721("NFTText", "NTXT") {
-        mint('first');
+        mint('Pilate');
     }
 
     function randomHue(
