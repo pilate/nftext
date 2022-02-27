@@ -38,11 +38,11 @@ contract NFTText is ERC721Enumerable, Ownable {
         );
 
         if (msg.sender != owner()) {
-            require(msg.value >= 0.005 ether);
+            require(msg.value >= 0.005 ether, "Requires 0.005 eth payment");
         }
 
         wordsToTokenId[supply + 1] = newWord;
-        _safeMint(msg.sender, supply + 1);
+        _safeMint(_destination, supply + 1);
     }
 
     function randomHue(
