@@ -24,6 +24,10 @@ contract NFTText is ERC721Enumerable, Ownable {
     }
 
     function mint(string memory _userText) public payable {
+        mint(_userText, msg.sender);
+    }
+
+    function mint(string memory _userText, address _destination) public payable {
         require(bytes(_userText).length <= 30, "String input exceeds limit.");
         uint256 supply = totalSupply();
 
