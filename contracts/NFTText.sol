@@ -12,6 +12,7 @@ contract NFTText is ERC721Enumerable, Ownable {
     using Strings for uint256;
 
     mapping(uint256 => Word) public wordsToTokenId;
+    uint private fee = 0.005 ether;
 
     struct Word {
         string text;
@@ -24,36 +25,40 @@ contract NFTText is ERC721Enumerable, Ownable {
     }
 
     function randomHue(
-        uint256 _seed,
-        uint256 _salt
-    ) public view returns (uint256) {
-        return uint256(
+        uint8 _salt
+    ) public view returns (string memory) {
+        return (uint256(
             keccak256(
-                abi.encodePacked(block.timestamp, msg.sender, _seed, _salt)
+                abi.encodePacked(
+                    blockhash(block.number), 
+                    "_",
+                    totalSupply(), 
+                    "_",
+                    _salt)
             )
-        ) % 361;
-    }
-
-    function mint(string memory _userText) public payable {
-        mint(_userText, msg.sender);
+        ) % 361).toString();
     }
 
     function mint(string memory _userText, address _destination) public payable {
-        require(bytes(_userText).length <= 30, "String input exceeds limit.");
+        require(bytes(_userText).length <= 30, "Text is too long");
         uint256 supply = totalSupply();
 
         Word memory newWord = Word(
             _userText,
-            randomHue(block.difficulty, supply).toString(),
-            randomHue(block.timestamp, supply).toString()
+            randomHue(1),
+            randomHue(2)
         );
 
         if (msg.sender != owner()) {
-            require(msg.value >= 0.005 ether, "Requires 0.005 eth payment");
+            require(msg.value >= fee, string(abi.encodePacked("Requires payment of ", fee.toString(), " wei")));
         }
 
         wordsToTokenId[supply + 1] = newWord;
         _safeMint(_destination, supply + 1);
+    }
+
+    function mint(string memory _userText) public payable {
+        mint(_userText, msg.sender);
     }
 
     function buildImage(uint256 _tokenId) private view returns (bytes memory) {
@@ -89,8 +94,8 @@ contract NFTText is ERC721Enumerable, Ownable {
                     Base64.encode(
                         bytes.concat(
                             "{"
-                                '"name":"NFTXT:', bytes(currentWord.text), '",'
-                                '"description":"', bytes(currentWord.text), '",'
+                                '"name":"', bytes(currentWord.text), '",'
+                                '"description":"\'', bytes(currentWord.text), '\' as NFTText by Pilate",'
                                 '"image":"data:image/svg+xml;base64,', buildImage(_tokenId), '"'
                             "}"
                         )
@@ -99,7 +104,14 @@ contract NFTText is ERC721Enumerable, Ownable {
             );
     }
 
-    //only owner
+    function getFee() public view returns (uint) {
+        return fee;
+    }
+
+    function setFee(uint _newFee) public onlyOwner {
+        fee = _newFee;
+    }
+
     function withdraw() public payable onlyOwner {
         (bool success, ) = payable(msg.sender).call{
             value: address(this).balance
