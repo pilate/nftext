@@ -11,13 +11,13 @@ import "./Base64.sol";
 contract NFTText is ERC721Enumerable, Ownable {
     using Strings for uint256;
 
-    mapping(uint256 => Word) public wordsToTokenId;
+    mapping(uint256 => Word) private wordsToTokenId;
     uint private fee = 0.005 ether;
 
     struct Word {
         string text;
-        string bgHue;
-        string textHue;
+        uint256 bgHue;
+        uint256 textHue;
     }
 
     constructor() ERC721("NFTText", "NTXT") {
@@ -26,22 +26,22 @@ contract NFTText is ERC721Enumerable, Ownable {
 
     function randomHue(
         uint8 _salt
-    ) public view returns (string memory) {
-        return (uint256(
+    ) private view returns (uint256) {
+        return uint256(
             keccak256(
                 abi.encodePacked(
-                    blockhash(block.number), 
+                    block.number, 
                     "_",
                     totalSupply(), 
                     "_",
                     _salt)
             )
-        ) % 361).toString();
+        ) % 361;
     }
 
     function mint(string memory _userText, address _destination) public payable {
         require(bytes(_userText).length <= 30, "Text is too long");
-        uint256 supply = totalSupply();
+        uint256 newSupply = totalSupply() + 1;
 
         Word memory newWord = Word(
             _userText,
@@ -53,22 +53,21 @@ contract NFTText is ERC721Enumerable, Ownable {
             require(msg.value >= fee, string(abi.encodePacked("Requires payment of ", fee.toString(), " wei")));
         }
 
-        wordsToTokenId[supply + 1] = newWord;
-        _safeMint(_destination, supply + 1);
+        wordsToTokenId[newSupply] = newWord;
+        _safeMint(_destination, newSupply);
     }
 
     function mint(string memory _userText) public payable {
         mint(_userText, msg.sender);
     }
 
-    function buildImage(uint256 _tokenId) private view returns (bytes memory) {
-        Word memory currentWord = wordsToTokenId[_tokenId];
+    function buildImage(string memory _userText, uint256 _bgHue, uint256 _textHue) private pure returns (bytes memory) {
         return
             Base64.encode(
-                bytes.concat(
+                abi.encodePacked(
                     '<svg xmlns="http://www.w3.org/2000/svg">'
-                    '<rect height="100%" width="100%" y="0" x="0" fill="hsl(', bytes(currentWord.bgHue), ',50%,25%)"/>'
-                    '<text y="50%" x="50%" text-anchor="middle" dy=".3em" fill="hsl(', bytes(currentWord.textHue), ',100%,80%)">', bytes(currentWord.text), "</text>"
+                    '<rect height="100%" width="100%" y="0" x="0" fill="hsl(', _bgHue.toString(), ',50%,25%)"/>'
+                    '<text y="50%" x="50%" text-anchor="middle" dy=".3em" fill="hsl(', _textHue.toString(), ',100%,80%)">', _userText, "</text>"
                     "</svg>"
                 )
             );
@@ -86,17 +85,17 @@ contract NFTText is ERC721Enumerable, Ownable {
             "ERC721Metadata: URI query for nonexistent token"
         );
 
-        Word memory currentWord = wordsToTokenId[_tokenId];
+        Word memory tokenWord = wordsToTokenId[_tokenId];
         return
             string(
                 bytes.concat(
                     "data:application/json;base64,",
                     Base64.encode(
-                        bytes.concat(
+                        abi.encodePacked(
                             "{"
-                                '"name":"', bytes(currentWord.text), '",'
-                                '"description":"\'', bytes(currentWord.text), '\' as NFTText by Pilate",'
-                                '"image":"data:image/svg+xml;base64,', buildImage(_tokenId), '"'
+                                '"name":"', tokenWord.text, '",'
+                                '"description":"\'', bytes(tokenWord.text), '\' as NFTText by Pilate",'
+                                '"image":"data:image/svg+xml;base64,', buildImage(tokenWord.text, tokenWord.bgHue, tokenWord.textHue), '"'
                             "}"
                         )
                     )
