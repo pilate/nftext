@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -31,9 +31,9 @@ contract NFTText is ERC721Enumerable, Ownable {
             keccak256(
                 abi.encodePacked(
                     block.number, 
-                    "_",
+                    false,
                     totalSupply(), 
-                    "_",
+                    false,
                     _salt)
             )
         ) % 361;
@@ -50,7 +50,7 @@ contract NFTText is ERC721Enumerable, Ownable {
         );
 
         if (msg.sender != owner()) {
-            require(msg.value >= fee, string(abi.encodePacked("Requires payment of ", fee.toString(), " wei")));
+            require(msg.value >= fee, string(abi.encodePacked("Missing fee of ", fee.toString(), " wei")));
         }
 
         wordsToTokenId[newSupply] = newWord;
